@@ -38,6 +38,12 @@ class Settings(BaseSettings):
     rag_top_k_image: int = Field(default=3, ge=0, le=20)
     rag_rrf_k: int = Field(default=60, ge=1)
 
+    # --- Ingestion ---
+    chunk_size: int = Field(default=800, ge=100)
+    chunk_overlap: int = Field(default=150, ge=0)
+    min_image_width: int = Field(default=100, ge=1)
+    min_image_height: int = Field(default=100, ge=1)
+
     # --- Chemins (relatifs à PROJECT_ROOT) ---
     corpus_path: str = Field(default="data/raw/Natural Language Processing-1.pdf")
     extracted_images_dir: str = Field(default="data/extracted/images")
