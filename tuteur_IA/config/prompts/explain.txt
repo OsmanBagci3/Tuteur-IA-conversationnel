@@ -1,0 +1,2 @@
+TODO — template de prompt "explique le concept X au niveau Y à partir de ce contexte".
+Rempli en P2.

@@ -1,0 +1,2 @@
+TODO — template de prompt "évalue la réponse de l'apprenant sur la question X, retourne un score et un feedback".
+Rempli en P3.

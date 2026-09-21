@@ -1,0 +1,2 @@
+TODO — template de prompt "génère une question de vérification niveau Y sur le concept X".
+Rempli en P3.

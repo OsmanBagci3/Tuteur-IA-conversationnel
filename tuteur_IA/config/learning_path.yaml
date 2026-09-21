@@ -1,0 +1,10 @@
+# =======================================================================
+# Parcours pédagogique du Tuteur IA — sujet : Fondamentaux du NLP.
+# Ce fichier sera rempli en P3. Les objectifs sont ordonnés : le tuteur
+# les parcourt séquentiellement et adapte le niveau selon les réponses.
+# =======================================================================
+
+subject: "Fondamentaux du NLP"
+levels: [beginner, intermediate, advanced]
+
+objectives: []  # à définir en P3

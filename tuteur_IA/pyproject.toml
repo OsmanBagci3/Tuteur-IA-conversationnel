@@ -1,0 +1,56 @@
+[project]
+name = "tuteur-ia"
+version = "0.1.0"
+description = "Tuteur IA conversationnel — assistant pédagogique RAG multimodal (texte + images) sur un corpus NLP."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Osman" }]
+keywords = ["rag", "llm", "multimodal", "clip", "mistral", "chromadb", "education"]
+
+dependencies = [
+    # --- Config & I/O ---
+    "python-dotenv>=1.0",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "pyyaml>=6.0",
+
+    # --- Ingestion PDF (texte + images) ---
+    "pymupdf>=1.24",
+    "pillow>=10.3",
+
+    # --- RAG : base vectorielle & embeddings ---
+    "chromadb>=0.5",
+    "sentence-transformers>=3.0",
+    "open-clip-torch>=2.24",
+    "torch>=2.3",
+
+    # --- LLM ---
+    "mistralai>=1.0",
+
+    # --- API & UI ---
+    "fastapi>=0.111",
+    "uvicorn[standard]>=0.30",
+    "streamlit>=1.36",
+    "httpx>=0.27",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tuteur_ia"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
