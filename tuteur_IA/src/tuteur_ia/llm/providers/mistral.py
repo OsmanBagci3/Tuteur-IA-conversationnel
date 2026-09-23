@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from mistralai import Mistral
+from mistralai.client import Mistral
 
 from tuteur_ia.llm.base import LLMClient, Message
 

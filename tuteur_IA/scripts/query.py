@@ -20,6 +20,8 @@ from config.settings import settings  # noqa: E402
 from tuteur_ia.ingestion.embedders import CLIPImageEmbedder, TextEmbedder  # noqa: E402
 from tuteur_ia.llm.base import Message  # noqa: E402
 from tuteur_ia.llm.providers.mistral import MistralClient  # noqa: E402
+from tuteur_ia.rag.context import format_context  # noqa: E402
+from tuteur_ia.rag.guardrail import is_topic_covered  # noqa: E402
 from tuteur_ia.rag.retriever import HybridRetriever, RetrievalResult  # noqa: E402
 
 PROMPT_PATH = PROJECT_ROOT / "config" / "prompts" / "explain.txt"
@@ -31,6 +33,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--k-text", type=int, default=settings.rag_top_k_text)
     parser.add_argument("--k-image", type=int, default=settings.rag_top_k_image)
     parser.add_argument(
+        "--level",
+        default="intermediate",
+        choices=["beginner", "intermediate", "advanced"],
+        help="Niveau simulé de l'apprenant (mode CLI de test, hors session tuteur).",
+    )
+    parser.add_argument(
         "--no-images",
         action="store_true",
         help="Ne pas envoyer les images à Mistral (retrieval texte pur).",
@@ -38,20 +46,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def build_prompt(question: str, retrieval: RetrievalResult) -> str:
+def build_prompt(question: str, level: str, retrieval: RetrievalResult) -> str:
     template = PROMPT_PATH.read_text(encoding="utf-8")
-    context_blocks: list[str] = []
-    for i, t in enumerate(retrieval.texts, start=1):
-        context_blocks.append(
-            f"[Extrait {i} — page {t.page}]\n{t.text.strip()}"
-        )
-    if retrieval.images:
-        pages = sorted({img.page for img in retrieval.images})
-        context_blocks.append(
-            f"[Schémas joints depuis les pages : {', '.join(map(str, pages))}]"
-        )
-    context = "\n\n".join(context_blocks) if context_blocks else "(aucun extrait pertinent trouvé)"
-    return template.format(context=context, question=question)
+    context = format_context(retrieval)
+    return template.format(context=context, level=level, question=question)
 
 
 def print_sources(retrieval: RetrievalResult) -> None:
@@ -94,9 +92,19 @@ def main() -> int:
     )
     print_sources(result)
 
+    if not is_topic_covered(result, settings.rag_min_score):
+        print("\n=== RÉPONSE DU TUTEUR ===\n")
+        print(
+            "Cette question ne semble pas couverte par le corpus utilisé "
+            f"(score de pertinence < {settings.rag_min_score}). "
+            "Essaie de reformuler ou pose une question sur le contenu du cours."
+        )
+        print()
+        return 0
+
     log.info("Appel Mistral (%s)...", settings.mistral_model)
     client = MistralClient(api_key=settings.mistral_api_key, model=settings.mistral_model)
-    prompt = build_prompt(args.question, result)
+    prompt = build_prompt(args.question, args.level, result)
 
     image_paths = [img.path for img in result.images] if not args.no_images else []
     user_msg = Message(role="user", content=prompt, images=image_paths)

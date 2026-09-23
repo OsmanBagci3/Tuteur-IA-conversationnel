@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     rag_top_k_text: int = Field(default=5, ge=1, le=20)
     rag_top_k_image: int = Field(default=3, ge=0, le=20)
     rag_rrf_k: int = Field(default=60, ge=1)
+    # Score cosine texte minimal pour considérer le sujet "couvert" par le corpus.
+    # En dessous, on court-circuite le LLM (pas d'hallucination possible).
+    rag_min_score: float = Field(default=0.25, ge=0.0, le=1.0)
 
     # --- Ingestion ---
     chunk_size: int = Field(default=800, ge=100)
@@ -44,10 +47,16 @@ class Settings(BaseSettings):
     min_image_width: int = Field(default=100, ge=1)
     min_image_height: int = Field(default=100, ge=1)
 
+    # --- Tuteur : adaptation de niveau ---
+    # Score (échelle 1-5) à partir duquel on monte / descend d'un niveau après un quiz.
+    adapt_score_up: int = Field(default=4, ge=1, le=5)
+    adapt_score_down: int = Field(default=2, ge=1, le=5)
+
     # --- Chemins (relatifs à PROJECT_ROOT) ---
     corpus_path: str = Field(default="data/raw/Natural Language Processing-1.pdf")
     extracted_images_dir: str = Field(default="data/extracted/images")
     chroma_persist_dir: str = Field(default="data/chroma")
+    learning_path_path: str = Field(default="config/learning_path.yaml")
 
     # --- API / UI ---
     api_host: str = Field(default="0.0.0.0")
@@ -67,6 +76,10 @@ class Settings(BaseSettings):
     @property
     def chroma_dir(self) -> Path:
         return (PROJECT_ROOT / self.chroma_persist_dir).resolve()
+
+    @property
+    def learning_path_file(self) -> Path:
+        return (PROJECT_ROOT / self.learning_path_path).resolve()
 
 
 settings = Settings()

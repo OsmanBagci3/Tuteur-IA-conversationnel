@@ -1,10 +1,64 @@
 # =======================================================================
 # Parcours pédagogique du Tuteur IA — sujet : Fondamentaux du NLP.
-# Ce fichier sera rempli en P3. Les objectifs sont ordonnés : le tuteur
-# les parcourt séquentiellement et adapte le niveau selon les réponses.
+# Les objectifs sont ordonnés : le tuteur les parcourt séquentiellement.
+# `query_hint` sert de requête RAG pour récupérer le contexte de l'objectif ;
+# `summary` cadre ce qui doit être couvert (utilisé nulle part dans le code
+# pour l'instant, sert de documentation humaine sur l'intention de chaque
+# objectif — peut être exploité plus tard pour affiner les prompts).
 # =======================================================================
 
 subject: "Fondamentaux du NLP"
 levels: [beginner, intermediate, advanced]
 
-objectives: []  # à définir en P3
+objectives:
+  - id: intro_nlp
+    title: "Introduction au NLP"
+    query_hint: "Qu'est-ce que le NLP, définitions et objectifs du traitement automatique du langage"
+    summary: >
+      Comprendre ce qu'est le traitement automatique du langage naturel (NLP),
+      ses objectifs (compréhension NLU, génération NLG) et son positionnement
+      interdisciplinaire (IA, linguistique, informatique).
+
+  - id: tokenization
+    title: "Tokenisation et prétraitement du texte"
+    query_hint: "Tokenisation, découpage du texte en mots et phrases, prétraitement"
+    summary: >
+      Comprendre le rôle de la tokenisation comme première étape d'un pipeline
+      NLP, et les autres opérations de prétraitement associées.
+
+  - id: morphology
+    title: "Morphologie : lexèmes, morphèmes et dérivation"
+    query_hint: "Morphologie, lexèmes, morphèmes, dérivation, allomorphes"
+    summary: >
+      Distinguer lexème, morphème et token ; comprendre les mécanismes de
+      dérivation et de flexion des mots.
+
+  - id: syntax_parsing
+    title: "Analyse syntaxique : grammaires et arbres de dépendance"
+    query_hint: "Analyse syntaxique, parsing, arbres de dépendance, grammaire formelle"
+    summary: >
+      Comprendre comment une phrase est décomposée en constituants (parsing)
+      et représentée via des arbres syntaxiques ou des graphes de dépendance.
+
+  - id: text_vectorization
+    title: "Représentation vectorielle du texte : Bag-of-Words et TF-IDF"
+    query_hint: "Vectorisation du texte, Bag of Words, TF-IDF, term frequency inverse document frequency"
+    summary: >
+      Comprendre comment transformer du texte en vecteurs numériques
+      exploitables par un algorithme, et le rôle du TF-IDF pour pondérer
+      l'importance des mots.
+
+  - id: language_models
+    title: "Modèles de langage probabilistes"
+    query_hint: "Modèles de langage probabilistes, n-grammes, unigramme, sampling"
+    summary: >
+      Comprendre le principe d'un modèle de langage statistique (n-grammes)
+      et comment il permet d'estimer la probabilité d'une séquence de mots.
+
+  - id: discourse_semantics
+    title: "Sémantique et discours : cohésion et résolution de référence"
+    query_hint: "Sémantique, cohésion du discours, résolution de référence, sens des mots"
+    summary: >
+      Comprendre les notions de cohésion textuelle et de résolution de
+      référence (à quoi renvoie un pronom, une reprise nominale) au niveau
+      du discours.
