@@ -2,10 +2,13 @@
 
 Usage :
     uv run python scripts/tutor_cli.py
+    uv run python scripts/tutor_cli.py --max-objectives 2 --skip-placement --level beginner
 """
 
 from __future__ import annotations
 
+import argparse
+import dataclasses
 import logging
 import sys
 from pathlib import Path
@@ -20,11 +23,35 @@ from tuteur_ia.llm.providers.mistral import MistralClient  # noqa: E402
 from tuteur_ia.rag.retriever import HybridRetriever  # noqa: E402
 from tuteur_ia.tutor.engine import TutorEngine  # noqa: E402
 from tuteur_ia.tutor.objectives import load_learning_path  # noqa: E402
+from tuteur_ia.tutor.state import Level, Phase  # noqa: E402
 
 SEPARATOR = "-" * 70
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Session interactive du tuteur IA.")
+    parser.add_argument(
+        "--max-objectives",
+        type=int,
+        default=None,
+        help="Limite le nombre d'objectifs du parcours (utile pour tester rapidement).",
+    )
+    parser.add_argument(
+        "--skip-placement",
+        action="store_true",
+        help="Saute l'auto-diagnostic initial et démarre directement à --level.",
+    )
+    parser.add_argument(
+        "--level",
+        choices=[level.value for level in Level],
+        default=Level.INTERMEDIATE.value,
+        help="Niveau de départ si --skip-placement est utilisé (défaut : intermediate).",
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     logging.basicConfig(
         level=logging.WARNING,  # on garde la sortie CLI propre, peu de bruit
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -33,6 +60,10 @@ def main() -> int:
     print("Chargement des modèles (peut prendre quelques secondes)...")
 
     learning_path = load_learning_path(settings.learning_path_file)
+    if args.max_objectives is not None:
+        learning_path = dataclasses.replace(
+            learning_path, objectives=learning_path.objectives[: args.max_objectives]
+        )
     text_embedder = TextEmbedder(settings.text_embedding_model)
     clip_embedder = CLIPImageEmbedder(settings.clip_model_name, settings.clip_pretrained)
     retriever = HybridRetriever(
@@ -48,18 +79,23 @@ def main() -> int:
     print(f"Parcours : {len(learning_path.objectives)} objectifs.\n")
 
     # --- Auto-diagnostic initial ---
-    print(SEPARATOR)
-    print("AUTO-DIAGNOSTIC INITIAL — quelques questions pour évaluer ton niveau de départ.")
-    print(SEPARATOR)
-    placement_turns = engine.start_placement()
-    for turn in placement_turns:
-        print(f"\n[{turn.index + 1}/{turn.total}] ({turn.objective_title})")
-        print(turn.question)
-        answer = input("Ta réponse > ").strip()
-        engine.submit_placement_answer(turn.index, answer)
+    if args.skip_placement:
+        engine.state.level = Level(args.level)
+        engine.state.phase = Phase.EXPLAIN
+        print(f"\n(Auto-diagnostic sauté — niveau forcé à {engine.state.level.value.upper()})\n")
+    else:
+        print(SEPARATOR)
+        print("AUTO-DIAGNOSTIC INITIAL — quelques questions pour évaluer ton niveau de départ.")
+        print(SEPARATOR)
+        placement_turns = engine.start_placement()
+        for turn in placement_turns:
+            print(f"\n[{turn.index + 1}/{turn.total}] ({turn.objective_title})")
+            print(turn.question)
+            answer = input("Ta réponse > ").strip()
+            engine.submit_placement_answer(turn.index, answer)
 
-    level = engine.finalize_placement()
-    print(f"\n→ Niveau initial estimé : {level.value.upper()}\n")
+        level = engine.finalize_placement()
+        print(f"\n→ Niveau initial estimé : {level.value.upper()}\n")
 
     # --- Boucle principale : explain -> quiz -> evaluate -> adapt ---
     while not engine.is_done():
