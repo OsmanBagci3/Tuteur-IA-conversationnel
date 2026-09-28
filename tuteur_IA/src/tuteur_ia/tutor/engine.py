@@ -140,6 +140,10 @@ class TutorEngine:
     def current_objective(self) -> Objective:
         return self._learning_path.objectives[self.state.objective_index]
 
+    @property
+    def total_objectives(self) -> int:
+        return len(self._learning_path.objectives)
+
     def is_done(self) -> bool:
         return self.state.phase == Phase.DONE
 

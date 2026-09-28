@@ -60,3 +60,6 @@ logs/
 # --- Modèles téléchargés (HF/CLIP cache) ---
 .cache/
 models/
+
+# --- Journal de bord personnel (fil conducteur du projet, non destiné au repo public) ---
+tuteur_IA/JOURNAL.md
