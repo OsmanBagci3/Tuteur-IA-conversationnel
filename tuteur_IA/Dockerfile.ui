@@ -1,0 +1,27 @@
+# Image UI : Streamlit (chat).
+#
+# NB : réutilise le même environnement complet que l'API (torch, chromadb...) bien
+# que l'UI n'ait besoin que de streamlit/httpx/pydantic-settings
+FROM python:3.11-slim
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
+WORKDIR /app
+
+# README.md est copié ici car hatchling (build backend) le référence dans pyproject.toml.
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --locked --no-dev --no-install-project
+
+COPY config/ config/
+COPY src/ src/
+RUN uv sync --locked --no-dev
+
+EXPOSE 8501
+
+CMD ["uv", "run", "streamlit", "run", "src/tuteur_ia/ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]

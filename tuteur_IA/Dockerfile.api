@@ -1,0 +1,27 @@
+# Image API : FastAPI + Uvicorn (retriever multimodal + LLM + moteur du tuteur).
+FROM python:3.11-slim
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
+
+# libgomp1 : requis par torch (CPU) pour le multi-threading OpenMP.
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/app/.venv
+
+WORKDIR /app
+
+# Couche dépendances séparée du code pour profiter du cache Docker entre rebuilds.
+# README.md est copié ici car hatchling (build backend) le référence dans pyproject.toml.
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --locked --no-dev --no-install-project
+
+COPY config/ config/
+COPY src/ src/
+COPY scripts/ scripts/
+RUN uv sync --locked --no-dev
+
+EXPOSE 8000
+
+CMD ["uv", "run", "uvicorn", "tuteur_ia.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

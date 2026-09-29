@@ -1,0 +1,20 @@
+# Environnements virtuels / dépendances locales (réinstallées dans l'image)
+.venv/
+__pycache__/
+*.pyc
+
+# Secrets — jamais dans l'image, injectés via env_file/environment au run
+.env
+
+# Données lourdes — montées en volumes, pas baked dans l'image
+data/raw/
+data/chroma/
+data/extracted/
+
+# Divers non nécessaires au build
+.git/
+.gitignore
+JOURNAL.md
+perso.txt
+docs/
+tests/

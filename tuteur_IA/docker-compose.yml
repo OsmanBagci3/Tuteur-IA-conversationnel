@@ -1,0 +1,31 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Données déjà ingérées localement (uv run python scripts/ingest.py)
+      - ./data/chroma:/app/data/chroma
+      - ./data/extracted/images:/app/data/extracted/images
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.ui
+    ports:
+      - "8501:8501"
+    environment:
+      # Résolution DNS interne à docker-compose : "api" = nom du service ci-dessus.
+      API_BASE_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
