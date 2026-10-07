@@ -20,6 +20,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from config.settings import settings  # noqa: E402
 
 API_BASE_URL = settings.api_base_url
+API_PUBLIC_URL = settings.api_public_url
 TIMEOUT = 120  # les appels LLM peuvent prendre plusieurs secondes
 
 
@@ -70,17 +71,37 @@ def _render_message(msg: dict[str, Any]) -> None:
             pages = ", ".join(str(p) for p in msg["source_pages"])
             st.caption(f"📖 Sources : pages {pages}")
         for url in msg.get("image_urls", []):
-            st.image(f"{API_BASE_URL}{url}")
+            # Rendu côté navigateur : il faut une URL publique (pas le service Docker interne).
+            st.image(f"{API_PUBLIC_URL}{url}")
 
 
 st.set_page_config(page_title="Tuteur IA — NLP", page_icon="🎓")
 
 if "session_id" not in st.session_state:
+    st.session_state.started = False
     st.session_state.messages = []
     st.session_state.session_id = None
     st.session_state.done = False
-    with st.spinner("Démarrage de la session..."):
-        _start_session()
+
+if not st.session_state.started:
+    st.title("🎓 Tuteur IA — Fondamentaux du NLP")
+    st.markdown(
+        """
+Un tuteur pédagogique conversationnel qui t'enseigne le NLP à partir d'un corpus de référence,
+avec des réponses **sourcées** (pages + schémas) et une difficulté qui **s'adapte à ton niveau**.
+
+**Déroulé** :
+1. 🧭 Un court auto-diagnostic (3 questions) estime ton niveau de départ.
+2. 📖 Pour chaque objectif : explication sourcée, puis question de compréhension.
+3. 📈 Ton niveau s'ajuste automatiquement selon tes réponses.
+        """
+    )
+    if st.button("▶️ Commencer la session", type="primary"):
+        with st.spinner("Démarrage de la session..."):
+            _start_session()
+        st.session_state.started = True
+        st.rerun()
+    st.stop()
 
 with st.sidebar:
     st.title("🎓 Tuteur IA")
@@ -107,12 +128,21 @@ else:
     user_input = st.chat_input("Ta réponse...")
     if user_input:
         st.session_state.messages.append(
-            {"role": "user", "text": user_input, "score": None, "source_pages": [], "image_urls": []}
+            {
+                "role": "user",
+                "text": user_input,
+                "score": None,
+                "source_pages": [],
+                "image_urls": [],
+            }
         )
         with st.chat_message("user"):
             st.markdown(user_input)
         with st.spinner("Le tuteur réfléchit..."):
             _apply_session_out(
-                _post("/message", json={"session_id": st.session_state.session_id, "content": user_input})
+                _post(
+                    "/message",
+                    json={"session_id": st.session_state.session_id, "content": user_input},
+                )
             )
         st.rerun()

@@ -20,6 +20,7 @@ from chromadb.api.models.Collection import Collection
 from tuteur_ia.ingestion.embedders import CLIPImageEmbedder, TextEmbedder
 from tuteur_ia.ingestion.indexer import IMAGE_COLLECTION, TEXT_COLLECTION
 from tuteur_ia.rag.fusion import reciprocal_rank_fusion
+from tuteur_ia.rag.reranker import CrossEncoderReranker
 
 logger = logging.getLogger(__name__)
 
@@ -57,16 +58,20 @@ class HybridRetriever:
     def __init__(
         self,
         chroma_dir: Path,
+        images_dir: Path,
         text_embedder: TextEmbedder,
         clip_embedder: CLIPImageEmbedder,
         rrf_k: int = 60,
+        reranker: CrossEncoderReranker | None = None,
     ) -> None:
         client = chromadb.PersistentClient(path=str(chroma_dir))
         self._text_col: Collection = client.get_collection(TEXT_COLLECTION)
         self._image_col: Collection = client.get_collection(IMAGE_COLLECTION)
+        self._images_dir = images_dir
         self._text_embedder = text_embedder
         self._clip_embedder = clip_embedder
         self._rrf_k = rrf_k
+        self._reranker = reranker
         logger.info(
             "Retriever prêt : %d chunks texte, %d images",
             self._text_col.count(),
@@ -82,6 +87,9 @@ class HybridRetriever:
         """Interroge les deux collections avec le même prompt."""
         texts = self._search_text(query, k_text) if k_text > 0 else []
         images = self._search_image(query, k_image) if k_image > 0 else []
+
+        if self._reranker is not None and texts:
+            texts = self._reranker.rerank(query, texts)
 
         unified = reciprocal_rank_fusion(
             ranked_lists=[[t.id for t in texts], [i.id for i in images]],
@@ -124,7 +132,7 @@ class HybridRetriever:
         return [
             RetrievedImage(
                 id=_first(raw["ids"], i),
-                path=Path(str(_first(raw["metadatas"], i).get("path", ""))),
+                path=self._images_dir / str(_first(raw["metadatas"], i).get("path", "")),
                 page=int(_first(raw["metadatas"], i).get("page", 0)),
                 xref=int(_first(raw["metadatas"], i).get("xref", 0)),
                 source=str(_first(raw["metadatas"], i).get("source", "")),

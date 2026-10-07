@@ -20,6 +20,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 from config.settings import settings  # noqa: E402
 from tuteur_ia.ingestion.embedders import CLIPImageEmbedder, TextEmbedder  # noqa: E402
 from tuteur_ia.llm.providers.mistral import MistralClient  # noqa: E402
+from tuteur_ia.rag.reranker import CrossEncoderReranker  # noqa: E402
 from tuteur_ia.rag.retriever import HybridRetriever  # noqa: E402
 from tuteur_ia.tutor.engine import TutorEngine  # noqa: E402
 from tuteur_ia.tutor.objectives import load_learning_path  # noqa: E402
@@ -66,11 +67,14 @@ def main() -> int:
         )
     text_embedder = TextEmbedder(settings.text_embedding_model)
     clip_embedder = CLIPImageEmbedder(settings.clip_model_name, settings.clip_pretrained)
+    reranker = CrossEncoderReranker(settings.cross_encoder_model) if settings.use_reranker else None
     retriever = HybridRetriever(
         chroma_dir=settings.chroma_dir,
+        images_dir=settings.images_dir,
         text_embedder=text_embedder,
         clip_embedder=clip_embedder,
         rrf_k=settings.rag_rrf_k,
+        reranker=reranker,
     )
     llm = MistralClient(api_key=settings.mistral_api_key, model=settings.mistral_model)
     engine = TutorEngine(retriever=retriever, llm=llm, learning_path=learning_path)

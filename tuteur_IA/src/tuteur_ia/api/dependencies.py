@@ -11,6 +11,7 @@ from config.settings import settings
 from tuteur_ia.ingestion.embedders import CLIPImageEmbedder, TextEmbedder
 from tuteur_ia.llm.base import LLMClient
 from tuteur_ia.llm.providers.mistral import MistralClient
+from tuteur_ia.rag.reranker import CrossEncoderReranker
 from tuteur_ia.rag.retriever import HybridRetriever
 from tuteur_ia.tutor.objectives import LearningPath, load_learning_path
 
@@ -25,11 +26,14 @@ class Resources:
 def build_resources() -> Resources:
     text_embedder = TextEmbedder(settings.text_embedding_model)
     clip_embedder = CLIPImageEmbedder(settings.clip_model_name, settings.clip_pretrained)
+    reranker = CrossEncoderReranker(settings.cross_encoder_model) if settings.use_reranker else None
     retriever = HybridRetriever(
         chroma_dir=settings.chroma_dir,
+        images_dir=settings.images_dir,
         text_embedder=text_embedder,
         clip_embedder=clip_embedder,
         rrf_k=settings.rag_rrf_k,
+        reranker=reranker,
     )
     llm = MistralClient(api_key=settings.mistral_api_key, model=settings.mistral_model)
     learning_path = load_learning_path(settings.learning_path_file)

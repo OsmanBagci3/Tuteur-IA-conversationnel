@@ -4,18 +4,22 @@ services:
       context: .
       dockerfile: Dockerfile.api
     ports:
-      - "8000:8000"
+      - "8001:8001"
     env_file:
       - .env
     volumes:
       # Données déjà ingérées localement (uv run python scripts/ingest.py)
       - ./data/chroma:/app/data/chroma
       - ./data/extracted/images:/app/data/extracted/images
+      # Cache des poids sentence-transformers/CLIP (HuggingFace Hub) : évite de les
+      # retélécharger à chaque recréation du conteneur (premier démarrage = quelques minutes).
+      - model_cache:/root/.cache
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
-      interval: 10s
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 15s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 180s
 
   ui:
     build:
@@ -24,8 +28,15 @@ services:
     ports:
       - "8501:8501"
     environment:
-      # Résolution DNS interne à docker-compose : "api" = nom du service ci-dessus.
-      API_BASE_URL: http://api:8000
+      # Résolution DNS interne à docker-compose : "api" = nom du service ci-dessus
+      # (utilisé uniquement pour les appels serveur-à-serveur httpx).
+      API_BASE_URL: http://api:8001
+      # Utilisée par le navigateur pour charger les images : doit rester joignable
+      # depuis le poste de l'utilisateur (port publié ci-dessus sur le service api).
+      API_PUBLIC_URL: http://localhost:8001
     depends_on:
       api:
         condition: service_healthy
+
+volumes:
+  model_cache:

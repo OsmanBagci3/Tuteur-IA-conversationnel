@@ -121,7 +121,7 @@ uv run python scripts/tutor_cli.py
 uv run python scripts/tutor_cli.py --max-objectives 2 --skip-placement --level beginner
 
 # 4. API + UI (deux terminaux)
-uv run uvicorn tuteur_ia.api.main:app --reload --port 8000
+uv run uvicorn tuteur_ia.api.main:app --reload --port 8001
 uv run streamlit run src/tuteur_ia/ui/app.py --server.port 8501
 # → ouvrir http://localhost:8501
 ```
@@ -134,7 +134,7 @@ uv run streamlit run src/tuteur_ia/ui/app.py --server.port 8501
 uv run python scripts/ingest.py --reset
 
 docker compose up --build
-# → API sur http://localhost:8000, UI sur http://localhost:8501
+# → API sur http://localhost:8001, UI sur http://localhost:8501
 ```
 
 ## Structure du dépôt

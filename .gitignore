@@ -51,6 +51,8 @@ tuteur_IA/data/raw/*
 tuteur_IA/data/extracted/
 # Index vectoriel Chroma (régénérable).
 tuteur_IA/data/chroma/
+# Traces d'observabilité (JSONL, régénérable, peut contenir des questions d'apprenants).
+tuteur_IA/data/logs/
 
 # --- Streamlit / logs ---
 .streamlit/secrets.toml
@@ -63,3 +65,5 @@ models/
 
 # --- Journal de bord personnel (fil conducteur du projet, non destiné au repo public) ---
 tuteur_IA/JOURNAL.md
+
+tuteur_IA/perso.txt

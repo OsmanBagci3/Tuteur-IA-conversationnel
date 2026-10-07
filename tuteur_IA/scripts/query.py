@@ -22,6 +22,7 @@ from tuteur_ia.llm.base import Message  # noqa: E402
 from tuteur_ia.llm.providers.mistral import MistralClient  # noqa: E402
 from tuteur_ia.rag.context import format_context  # noqa: E402
 from tuteur_ia.rag.guardrail import is_topic_covered  # noqa: E402
+from tuteur_ia.rag.reranker import CrossEncoderReranker  # noqa: E402
 from tuteur_ia.rag.retriever import HybridRetriever, RetrievalResult  # noqa: E402
 
 PROMPT_PATH = PROJECT_ROOT / "config" / "prompts" / "explain.txt"
@@ -77,11 +78,14 @@ def main() -> int:
     clip_embedder = CLIPImageEmbedder(settings.clip_model_name, settings.clip_pretrained)
 
     log.info("Chargement du retriever...")
+    reranker = CrossEncoderReranker(settings.cross_encoder_model) if settings.use_reranker else None
     retriever = HybridRetriever(
         chroma_dir=settings.chroma_dir,
+        images_dir=settings.images_dir,
         text_embedder=text_embedder,
         clip_embedder=clip_embedder,
         rrf_k=settings.rag_rrf_k,
+        reranker=reranker,
     )
 
     log.info("Recherche pour : %r", args.question)

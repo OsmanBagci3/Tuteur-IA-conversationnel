@@ -97,11 +97,14 @@ class ChromaIndexer:
         # Le "document" côté image est un placeholder textuel (page + fichier)
         # qui reste utile pour le débogage et pour l'affichage rapide.
         documents = [f"page {img.page} — {img.path.name}" for img in images]
+        # Seul le nom de fichier est stocké (pas le chemin absolu) : le dossier
+        # images_dir peut différer entre l'hôte et un conteneur Docker, il est
+        # résolu au moment de la lecture (voir HybridRetriever).
         metadatas = [
             {
                 "page": img.page,
                 "xref": img.xref,
-                "path": str(img.path),
+                "path": img.path.name,
                 "width": img.width,
                 "height": img.height,
                 "source": source,

@@ -54,3 +54,6 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
+# UP042 : `class Level(str, Enum)` est un choix délibéré (sérialisation JSON via
+# `str`, compatible Pydantic) plutôt qu'un oubli à migrer vers `enum.StrEnum`.
+ignore = ["UP042"]

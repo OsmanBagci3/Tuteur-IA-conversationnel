@@ -52,7 +52,9 @@ class ChatSession:
             return self._handle_placement_answer(content)
         if self.engine.state.phase == Phase.QUIZ:
             return self._handle_quiz_answer(content)
-        return [ChatTurn(kind="system", text="Le parcours est terminé, il n'y a plus rien à répondre.")]
+        return [
+            ChatTurn(kind="system", text="Le parcours est terminé, il n'y a plus rien à répondre.")
+        ]
 
     # ------------------------------------------------------------------ #
     # Internes
@@ -68,6 +70,8 @@ class ChatSession:
 
         level = self.engine.finalize_placement()
         turns = [ChatTurn(kind="system", text=f"Niveau initial estimé : {level.value}.")]
+        title = self.engine.current_objective().title
+        turns.append(ChatTurn(kind="system", text=f"🚀 On démarre avec : {title}"))
         turns.extend(self._start_current_objective())
         return turns
 
@@ -81,6 +85,8 @@ class ChatSession:
         if result.done:
             turns.append(ChatTurn(kind="system", text="Parcours terminé, bravo !"))
         else:
+            title = self.engine.current_objective().title
+            turns.append(ChatTurn(kind="system", text=f"➡️ Objectif suivant : {title}"))
             turns.extend(self._start_current_objective())
         return turns
 

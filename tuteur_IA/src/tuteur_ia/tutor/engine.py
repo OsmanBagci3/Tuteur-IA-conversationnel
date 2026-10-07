@@ -161,7 +161,8 @@ class TutorEngine:
 
         context = format_context(retrieval)
         template = EXPLAIN_PROMPT.read_text(encoding="utf-8")
-        request = f"Explique-moi le concept suivant : {objective.title}. {objective.summary}".strip()
+        request = f"Explique-moi le concept suivant : {objective.title}. {objective.summary}"
+        request = request.strip()
         prompt = template.format(context=context, level=self.state.level.value, question=request)
 
         image_paths = [img.path for img in retrieval.images]
@@ -192,7 +193,9 @@ class TutorEngine:
 
     def evaluate_answer(self, answer: str) -> EvaluationTurn:
         if self._pending_question is None:
-            raise RuntimeError("Aucune question de quiz en attente — appelle generate_quiz() d'abord.")
+            raise RuntimeError(
+                "Aucune question de quiz en attente — appelle generate_quiz() d'abord."
+            )
 
         objective = self.current_objective()
         retrieval = self._get_retrieval(objective)

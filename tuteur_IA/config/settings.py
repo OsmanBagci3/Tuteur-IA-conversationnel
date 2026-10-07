@@ -41,6 +41,17 @@ class Settings(BaseSettings):
     # En dessous, on court-circuite le LLM (pas d'hallucination possible).
     rag_min_score: float = Field(default=0.25, ge=0.0, le=1.0)
 
+    # --- Reranking (cross-encoder, P6c) ---
+    # Réordonne les k_text chunks texte par pertinence (requête, document) après la
+    # recherche bi-encoder — plus précis mais plus lent, donc appliqué seulement sur
+    # les quelques candidats déjà récupérés, jamais sur toute la base.
+    use_reranker: bool = Field(default=True)
+    cross_encoder_model: str = Field(default="cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+    # --- Traçabilité (P6c) ---
+    # Chaque interaction (retrieval + appel LLM) est journalisée en JSONL pour inspection.
+    trace_log_path: str = Field(default="data/logs/traces.jsonl")
+
     # --- Ingestion ---
     chunk_size: int = Field(default=800, ge=100)
     chunk_overlap: int = Field(default=150, ge=0)
@@ -60,9 +71,14 @@ class Settings(BaseSettings):
 
     # --- API / UI ---
     api_host: str = Field(default="0.0.0.0")
-    api_port: int = Field(default=8000)
+    api_port: int = Field(default=8001)
     ui_port: int = Field(default=8501)
-    api_base_url: str = Field(default="http://localhost:8000")
+    # URL utilisée par le serveur Streamlit pour appeler l'API (peut être un nom de service
+    # Docker interne, ex. http://api:8001, non résolvable depuis le navigateur).
+    api_base_url: str = Field(default="http://localhost:8001")
+    # URL utilisée par le NAVIGATEUR pour charger les images (doit être joignable depuis le
+    # poste de l'utilisateur, ex. via le port publié par docker-compose).
+    api_public_url: str = Field(default="http://localhost:8001")
 
     # --- Helpers pour manipuler les chemins comme des Path absolus ---
     @property
@@ -80,6 +96,10 @@ class Settings(BaseSettings):
     @property
     def learning_path_file(self) -> Path:
         return (PROJECT_ROOT / self.learning_path_path).resolve()
+
+    @property
+    def trace_log_file(self) -> Path:
+        return (PROJECT_ROOT / self.trace_log_path).resolve()
 
 
 settings = Settings()

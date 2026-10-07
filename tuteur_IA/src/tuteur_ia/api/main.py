@@ -1,7 +1,7 @@
 """API FastAPI du Tuteur IA.
 
 Lancement :
-    uv run uvicorn tuteur_ia.api.main:app --reload --host 0.0.0.0 --port 8000
+    uv run uvicorn tuteur_ia.api.main:app --reload --host 0.0.0.0 --port 8001
 """
 
 from __future__ import annotations
