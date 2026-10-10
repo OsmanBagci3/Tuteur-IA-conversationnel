@@ -16,10 +16,12 @@ l'ORDRE de la liste est modifié par le reranker.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from sentence_transformers import CrossEncoder
 
-from tuteur_ia.rag.retriever import RetrievedText
+if TYPE_CHECKING:
+    from tuteur_ia.rag.retriever import RetrievedText
 
 logger = logging.getLogger(__name__)
 
@@ -40,5 +42,5 @@ class CrossEncoderReranker:
             return texts
         pairs = [(query, t.text) for t in texts]
         ce_scores = self._model.predict(pairs)
-        ranked = sorted(zip(texts, ce_scores), key=lambda pair: pair[1], reverse=True)
+        ranked = sorted(zip(texts, ce_scores, strict=True), key=lambda pair: pair[1], reverse=True)
         return [t for t, _ in ranked]

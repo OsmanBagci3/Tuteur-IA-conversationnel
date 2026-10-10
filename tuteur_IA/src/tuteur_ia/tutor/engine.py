@@ -8,11 +8,13 @@ par un script CLI (P3) que par l'API FastAPI (P4).
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
 from config.settings import settings
 from tuteur_ia.llm.base import LLMClient, Message
+from tuteur_ia.observability.tracer import TraceLogger
 from tuteur_ia.rag.context import format_context
 from tuteur_ia.rag.guardrail import is_topic_covered
 from tuteur_ia.rag.retriever import HybridRetriever, RetrievalResult
@@ -72,10 +74,12 @@ class TutorEngine:
         retriever: HybridRetriever,
         llm: LLMClient,
         learning_path: LearningPath,
+        tracer: TraceLogger | None = None,
     ) -> None:
         self._retriever = retriever
         self._llm = llm
         self._learning_path = learning_path
+        self._tracer = tracer or TraceLogger(settings.trace_log_file)
         self.state = SessionState()
 
         self._context_cache: dict[str, RetrievalResult] = {}
@@ -115,6 +119,7 @@ class TutorEngine:
         objective, question = self._placement_pending[index]
         retrieval = self._get_retrieval(objective)
         context = format_context(retrieval)
+        start = time.perf_counter()
         result = evaluate_answer(
             self._llm,
             EVALUATE_PROMPT,
@@ -123,6 +128,12 @@ class TutorEngine:
             question=question,
             answer=answer,
             context=context,
+        )
+        self._tracer.log(
+            "placement_evaluate",
+            objective_id=objective.id,
+            score=result.score,
+            latency_ms=round((time.perf_counter() - start) * 1000, 1),
         )
         self.state.placement_scores.append(result.score)
 
@@ -166,7 +177,15 @@ class TutorEngine:
         prompt = template.format(context=context, level=self.state.level.value, question=request)
 
         image_paths = [img.path for img in retrieval.images]
+        start = time.perf_counter()
         answer = self._llm.chat([Message(role="user", content=prompt, images=image_paths)])
+        self._tracer.log(
+            "explain",
+            objective_id=objective.id,
+            level=self.state.level.value,
+            latency_ms=round((time.perf_counter() - start) * 1000, 1),
+            response_chars=len(answer),
+        )
 
         self.state.phase = Phase.QUIZ
         return ExplainTurn(
@@ -181,12 +200,19 @@ class TutorEngine:
         retrieval = self._get_retrieval(objective)
         context = format_context(retrieval)
 
+        start = time.perf_counter()
         question = generate_quiz_question(
             self._llm,
             QUIZ_PROMPT,
             objective_title=objective.title,
             level=self.state.level.value,
             context=context,
+        )
+        self._tracer.log(
+            "quiz_generate",
+            objective_id=objective.id,
+            level=self.state.level.value,
+            latency_ms=round((time.perf_counter() - start) * 1000, 1),
         )
         self._pending_question = question
         return QuizTurn(objective_title=objective.title, question=question)
@@ -201,6 +227,7 @@ class TutorEngine:
         retrieval = self._get_retrieval(objective)
         context = format_context(retrieval)
 
+        start = time.perf_counter()
         result: EvaluationResult = evaluate_answer(
             self._llm,
             EVALUATE_PROMPT,
@@ -214,6 +241,14 @@ class TutorEngine:
 
         old_level = self.state.level
         new_level = self._adapt_level(old_level, result.score)
+        self._tracer.log(
+            "evaluate",
+            objective_id=objective.id,
+            score=result.score,
+            level_before=old_level.value,
+            level_after=new_level.value,
+            latency_ms=round((time.perf_counter() - start) * 1000, 1),
+        )
         self.state.level = new_level
         self.state.results.append(
             ObjectiveResult(objective_id=objective.id, score=result.score, level_at_time=old_level)
@@ -245,11 +280,22 @@ class TutorEngine:
         explain/quiz/evaluate pour rester cohérent sur tout le cycle de l'objectif.
         """
         if objective.id not in self._context_cache:
-            self._context_cache[objective.id] = self._retriever.retrieve(
+            start = time.perf_counter()
+            result = self._retriever.retrieve(
                 query=objective.query_hint,
                 k_text=settings.rag_top_k_text,
                 k_image=settings.rag_top_k_image,
             )
+            self._tracer.log(
+                "retrieval",
+                objective_id=objective.id,
+                query=objective.query_hint,
+                num_texts=len(result.texts),
+                num_images=len(result.images),
+                best_text_score=result.texts[0].score if result.texts else None,
+                latency_ms=round((time.perf_counter() - start) * 1000, 1),
+            )
+            self._context_cache[objective.id] = result
         return self._context_cache[objective.id]
 
     @staticmethod

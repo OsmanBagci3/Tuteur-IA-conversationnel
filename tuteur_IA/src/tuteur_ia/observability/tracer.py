@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class TraceLogger:
-    """Écrit une ligne JSON par événement dans `log_path` (créé si besoin)."""
+    """Écrit une ligne JSON par événement dans `log_path`."""
 
     def __init__(self, log_path: Path) -> None:
         self._log_path = log_path
@@ -33,7 +33,9 @@ class TraceLogger:
             with self._log_path.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
         except OSError:
-            logger.warning("Échec d'écriture de la trace dans %s (ignoré).", self._log_path, exc_info=True)
+            logger.warning(
+                "Échec d'écriture de la trace dans %s (ignoré).", self._log_path, exc_info=True
+            )
 
     @contextmanager
     def timed(self, event: str, **fields: Any):
