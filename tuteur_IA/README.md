@@ -7,8 +7,7 @@
 **Statut : V1 fonctionnelle** (ingestion, RAG multimodal, moteur pédagogique, API + UI,
 Docker). Voir [Limites connues & évolutions](#limites-connues--évolutions).
 
-<!-- TODO : une fois le GIF de démo enregistré (docs/demo.gif), décommenter la ligne suivante -->
-<!-- ![Démo](docs/demo.gif) -->
+![Démo](docs/peek_3.gif)
 
 ---
 
