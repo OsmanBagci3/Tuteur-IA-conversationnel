@@ -4,8 +4,6 @@
 >
 > Sujet de la V1 : **fondamentaux du NLP**, à partir d'un cours PDF de ~95 pages.
 
-**Statut : V1 fonctionnelle** (ingestion, RAG multimodal, moteur pédagogique, API + UI,
-Docker). Voir [Limites connues & évolutions](#limites-connues--évolutions).
 
 ![Démo](docs/peek_3.gif)
 
@@ -28,26 +26,26 @@ Docker). Voir [Limites connues & évolutions](#limites-connues--évolutions).
 
 Construire un tuteur conversationnel qui :
 
-1. **Ingère** un corpus (PDF) et le rend interrogeable par recherche sémantique multimodale.
-2. **Explique** un concept clairement, en s'appuyant sur des passages sourcés du corpus.
-3. **Interroge** l'apprenant pour vérifier sa compréhension.
-4. **S'adapte** à son niveau selon la qualité des réponses (3 paliers).
-5. **Cite** ses sources (extraits texte et schémas) pour rester fiable et traçable.
+1. Ingère un corpus (PDF) et le rend interrogeable par recherche sémantique multimodale.
+2. Explique un concept clairement, en s'appuyant sur des passages sourcés du corpus.
+3. Interroge l'apprenant pour vérifier sa compréhension.
+4. S'adapte à son niveau selon la qualité des réponses (3 paliers).
+5. Cite ses sources (extraits texte et schémas) pour rester fiable et traçable.
 
 ## Fonctionnalités V1
 
-- [x] Ingestion PDF → chunks texte + images extraites
-- [x] Indexation multimodale dans **ChromaDB** (2 collections : texte + image)
-- [x] Retrieval hybride avec fusion **RRF** (Reciprocal Rank Fusion)
-- [x] Garde-fou anti-hallucination (seuil de score + prompt renforcé)
-- [x] Auto-diagnostic initial pour placer l'apprenant
-- [x] Boucle pédagogique `explain → quiz → evaluate → adapt`
-- [x] API REST (**FastAPI**) : `/session`, `/message`, `/reset`
-- [x] UI de démo (**Streamlit**) avec chat, badge niveau, sources texte + images
-- [x] Conteneurisation Docker (API + UI, `docker-compose`)
-- [x] Reranking cross-encoder (`sentence-transformers.CrossEncoder`) sur les résultats du retriever
-- [x] Traçabilité : logs JSONL locaux (latence, scores, événements du moteur pédagogique)
-- [x] Tests automatisés (pytest, 56 tests) et CI (GitHub Actions)
+- Ingestion PDF → chunks texte + images extraites
+- Indexation multimodale dans **ChromaDB** (2 collections : texte + image)
+- Retrieval hybride avec fusion **RRF** (Reciprocal Rank Fusion)
+- Garde-fou anti-hallucination (seuil de score + prompt renforcé)
+- Auto-diagnostic initial pour placer l'apprenant
+- Boucle pédagogique `explain → quiz → evaluate → adapt`
+- API REST (**FastAPI**) : `/session`, `/message`, `/reset`
+- UI de démo (**Streamlit**) avec chat, badge niveau, sources texte + images
+- Conteneurisation Docker (API + UI, `docker-compose`)
+- Reranking cross-encoder (`sentence-transformers.CrossEncoder`) sur les résultats du retriever
+- Traçabilité : logs JSONL locaux (latence, scores, événements du moteur pédagogique)
+- Tests automatisés (pytest, 56 tests) et CI (GitHub Actions)
 
 ## Architecture
 
@@ -59,7 +57,7 @@ PDF ─► [Ingestion : texte + images]
 
 ┌─────────────────────────── Session de tutorat ───────────────────────────┐
 │                                                                          │
-│  UI Streamlit ──HTTP──► API FastAPI (/session /message /reset)          │
+│  UI Streamlit ──HTTP──► API FastAPI                                     │
 │                              │                                          │
 │                              ▼                                          │
 │                        ChatSession (séquenceur de tours)                │
@@ -86,7 +84,6 @@ PDF ─► [Ingestion : texte + images]
 | Base vectorielle | ChromaDB (mode persistant) | Zéro infra, deux collections |
 | API | FastAPI + Uvicorn | Standard Python moderne, async |
 | UI | Streamlit | Démo rapide, affichage images natif |
-| Config | Pydantic Settings + `.env` | Type-safe, secrets isolés |
 | Packaging | `uv` + `hatchling` (src layout) | Rapide, standard PEP 621 / 735 |
 
 ## Installation
@@ -143,10 +140,10 @@ docker compose up --build
 
 ```
 tuteur_IA/
-├── config/                     # Settings, prompts, parcours pédagogique
+├── config/                     # Settings, prompts, parcours
 │   ├── settings.py
 │   ├── learning_path.yaml
-│   └── prompts/                # explain.txt, quiz.txt, evaluate.txt
+│   └── prompts/                
 ├── src/tuteur_ia/
 │   ├── ingestion/              # PDF → texte + images → embeddings → Chroma
 │   ├── rag/                    # Retrieval multimodal, fusion RRF, garde-fou, contexte
@@ -156,12 +153,12 @@ tuteur_IA/
 │   └── ui/                     # Streamlit (chat)
 ├── scripts/
 │   ├── ingest.py                # CLI d'ingestion
-│   ├── query.py                 # CLI de test RAG + LLM (sans moteur pédagogique)
+│   ├── query.py                 # CLI de test RAG + LLM
 │   └── tutor_cli.py             # CLI de session de tutorat complète
 ├── data/
-│   ├── raw/                    # Corpus source (gitignoré)
-│   ├── extracted/images/       # Images extraites du PDF (gitignoré)
-│   └── chroma/                 # Index vectoriel persistant (gitignoré)
+│   ├── raw/                    # Corpus source (ignoré)
+│   ├── extracted/images/       # Images extraites du PDF (ignoré)
+│   └── chroma/                 # Index vectoriel persistant (ignoré)
 ├── tests/
 ├── docs/
 ├── Dockerfile.api / Dockerfile.ui / docker-compose.yml
