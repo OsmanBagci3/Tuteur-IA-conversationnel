@@ -46,6 +46,9 @@ Construire un tuteur conversationnel qui :
 - [x] API REST (**FastAPI**) : `/session`, `/message`, `/reset`
 - [x] UI de démo (**Streamlit**) avec chat, badge niveau, sources texte + images
 - [x] Conteneurisation Docker (API + UI, `docker-compose`)
+- [x] Reranking cross-encoder (`sentence-transformers.CrossEncoder`) sur les résultats du retriever
+- [x] Traçabilité : logs JSONL locaux (latence, scores, événements du moteur pédagogique)
+- [x] Tests automatisés (pytest, 56 tests) et CI (GitHub Actions)
 
 ## Architecture
 
@@ -177,8 +180,6 @@ tuteur_IA/
   les sessions en cours. Suffisant pour une démo, pas pour un usage multi-utilisateurs réel.
 - **Score image (CLIP) non utilisé pour le garde-fou** : empiriquement peu discriminant
   entre questions sur/hors sujet (voir `JOURNAL.md` pour le détail de l'analyse).
-- **Pas de reranking** (cross-encoder) sur les résultats du retriever — piste identifiée
-  pour affiner la pertinence, reportée en bonus.
 - **Image Docker de l'UI non optimisée** : partage le même environnement complet que l'API
   (torch, chromadb...) alors qu'elle n'a besoin que de `streamlit`/`httpx` — simplification
   assumée (un seul `pyproject.toml`) plutôt que des groupes de dépendances séparés.
@@ -192,8 +193,7 @@ tuteur_IA/
 - Déploiement cloud
 - Gamification poussée
 - Évaluation offline systématique (RAGAS, etc.)
-- Tests automatisés (pytest) et CI (GitHub Actions)
 
 ## Licence
 
-MIT — voir `LICENSE`.
+MIT — voir [`LICENSE`](../LICENSE).
