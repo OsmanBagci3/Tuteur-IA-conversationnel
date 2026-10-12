@@ -2,7 +2,6 @@
 name = "tuteur-ia"
 version = "0.1.0"
 description = "Tuteur IA conversationnel — assistant pédagogique RAG multimodal (texte + images) sur un corpus NLP."
-readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Osman" }]
