@@ -71,7 +71,7 @@ def _render_message(msg: dict[str, Any]) -> None:
             pages = ", ".join(str(p) for p in msg["source_pages"])
             st.caption(f"📖 Sources : pages {pages}")
         for url in msg.get("image_urls", []):
-            # Rendu côté navigateur : il faut une URL publique (pas le nom de service Docker interne).
+            # Rendu navigateur : URL publique requise (pas le nom de service Docker interne).
             st.image(f"{API_PUBLIC_URL}{url}")
 
 
