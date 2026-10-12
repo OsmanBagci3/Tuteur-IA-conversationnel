@@ -5,7 +5,7 @@
 > Sujet de la V1 : **fondamentaux du NLP**, à partir d'un cours PDF de ~95 pages.
 
 
-![Démo](docs/peek_3.gif)
+![Démo](tuteur_IA/docs/peek_3.gif)
 
 ---
 
