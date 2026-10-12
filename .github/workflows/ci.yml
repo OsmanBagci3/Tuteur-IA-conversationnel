@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+default :
+  run:
+    working-directory: tuteur_IA
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
